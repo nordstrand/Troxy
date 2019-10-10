@@ -78,6 +78,7 @@
     <module>filter</module>
     <module>troxy-core</module>
     <module>troxy-server</module>
+    <module>troxy-embedded</module>
   </modules>
 
   <dependencyManagement>

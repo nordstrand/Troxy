@@ -1,21 +1,12 @@
-package no.sb1.troxy;
+package no.sb1.troxy.embedded;
 
 import no.sb1.troxy.common.Config;
 import no.sb1.troxy.common.Mode;
 import no.sb1.troxy.http.common.Filter;
 import no.sb1.troxy.jetty.TroxyJettyServer;
 import no.sb1.troxy.jetty.TroxyJettyServer.TroxyJettyServerConfig.TroxyJettyServerConfigBuilder;
-import no.sb1.troxy.rest.ApiHandler;
 import no.sb1.troxy.util.*;
 import org.eclipse.jetty.server.handler.HandlerList;
-import org.eclipse.jetty.server.handler.ResourceHandler;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.glassfish.jersey.server.ResourceConfig;
-import org.glassfish.jersey.server.ServerProperties;
-import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,11 +26,11 @@ import java.util.zip.ZipFile;
 /**
  * A server for HTTP requests.
  */
-public class Troxy implements Runnable {
+public class TroxyEmbedded implements Runnable {
     /**
      * Logger for this class.
      */
-    private static final Logger log = LoggerFactory.getLogger(Troxy.class);
+    private static final Logger log = LoggerFactory.getLogger(TroxyEmbedded.class);
 
     /**
      * Where Troxy resides, set to current working directory.
@@ -96,14 +87,14 @@ public class Troxy implements Runnable {
      * @param troxyHome
      * @param logDirectory
      */
-    public Troxy(final String troxyHome,
-                 final String logDirectory,
-                 final String loadedRecordingsFile,
-                 final String filterDirectory,
-                 final Config config,
-                 final Cache cache,
-                 final TroxyFileHandler troxyFileHandler,
-                 final StatisticsCollector statisticsCollector) {
+    public TroxyEmbedded(final String troxyHome,
+                         final String logDirectory,
+                         final String loadedRecordingsFile,
+                         final String filterDirectory,
+                         final Config config,
+                         final Cache cache,
+                         final TroxyFileHandler troxyFileHandler,
+                         final StatisticsCollector statisticsCollector) {
 
         this.troxyHome = troxyHome;
         this.logDirectory = logDirectory;
@@ -134,37 +125,6 @@ public class Troxy implements Runnable {
         RequestInterceptor requestInterceptor = new RequestInterceptor();
         handlerList.addHandler(requestInterceptor);
 
-        // a resource handler for static files (html, js, css)
-        ResourceHandler resourceHandler = new ResourceHandler();
-        String resourceBase = "server/server/src/main/resources/webapp";
-        if ((new File(resourceBase)).exists())
-            resourceHandler.setResourceBase(resourceBase); // running locally, makes us able to modify html/css/js without building a new jar
-        else
-            resourceHandler.setResourceBase(Troxy.class.getClassLoader().getResource("webapp").toExternalForm());
-        handlerList.addHandler(resourceHandler);
-
-        //Enable REST API by default
-        String enableRest = config.getValue("troxy.restapi.enabled");
-        if (!"false".equalsIgnoreCase(enableRest)) {
-            // a servlet for handling the REST api
-            ResourceConfig resourceConfig = new ResourceConfig();
-            resourceConfig.register(JacksonFeature.class);
-            resourceConfig.register(MultiPartFeature.class);
-            resourceConfig.property(ServerProperties.FEATURE_AUTO_DISCOVERY_DISABLE, true);
-            resourceConfig.property(ServerProperties.METAINF_SERVICES_LOOKUP_DISABLE, true);
-            resourceConfig.register(MultiPartFeature.class);
-            resourceConfig.register(new ApiHandler(this, config, statisticsCollector, troxyFileHandler, cache));
-
-            ServletHolder apiServlet = new ServletHolder(new ServletContainer(resourceConfig));
-            apiServlet.setInitOrder(0);
-
-            ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
-            context.setVirtualHosts(getRestAPIHostnames());
-            context.setContextPath("/api");
-            context.addServlet(apiServlet, "/*");
-
-            handlerList.addHandler(context);
-        }
 
         // and finally the simulator handler
         SimulatorHandler simulatorHandler = new SimulatorHandler(this.modeHolder, this.filterClasses, config, troxyFileHandler, cache);
@@ -172,10 +132,7 @@ public class Troxy implements Runnable {
         return handlerList;
     }
 
-    private String[] getRestAPIHostnames() {
-        String restHostnames=config.getValue("troxy.restapi.hostnames");
-        return restHostnames != null && !restHostnames.isEmpty() ? restHostnames.trim().split("\\s*,\\s*"): null;
-    }
+
 
     /**
      * Get the current HTTP simulator mode.
@@ -298,7 +255,7 @@ public class Troxy implements Runnable {
         statisticsCollector.startThread();
 
         /* set up server thread & start it */
-        Troxy troxy = new Troxy(troxyHome, logDirectory, loadedRecordingsFile, filterDirectory, config, cache, troxyFileHandler, statisticsCollector);
+        TroxyEmbedded troxy = new TroxyEmbedded(troxyHome, logDirectory, loadedRecordingsFile, filterDirectory, config, cache, troxyFileHandler, statisticsCollector);
         new Thread(troxy).start();
 
         /* set up shutdown hook */
