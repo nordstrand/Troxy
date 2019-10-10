@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-import no.sb1.troxy.Troxy;
 import no.sb1.troxy.http.common.Request;
 import no.sb1.troxy.http.common.Response;
 import no.sb1.troxy.record.v3.Recording;

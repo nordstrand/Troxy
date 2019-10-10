@@ -1,5 +1,24 @@
 package no.sb1.troxy.util;
 
+import no.sb1.troxy.common.Config;
+import no.sb1.troxy.common.Mode;
+import no.sb1.troxy.http.common.Filter;
+import no.sb1.troxy.http.common.Request;
+import no.sb1.troxy.http.common.Response;
+import no.sb1.troxy.record.v3.Recording;
+import no.sb1.troxy.record.v3.RequestPattern;
+import no.sb1.troxy.record.v3.ResponseTemplate;
+import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -14,25 +33,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import no.sb1.troxy.Troxy;
-import no.sb1.troxy.common.Config;
-import no.sb1.troxy.common.Mode;
-import no.sb1.troxy.http.common.Filter;
-import no.sb1.troxy.http.common.Request;
-import no.sb1.troxy.http.common.Response;
-import no.sb1.troxy.record.v3.Recording;
-import no.sb1.troxy.record.v3.RequestPattern;
-import no.sb1.troxy.record.v3.ResponseTemplate;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.eclipse.jetty.server.handler.AbstractHandler;
 
 /**
  * A handler for incoming requests.
@@ -41,7 +41,8 @@ public class SimulatorHandler extends AbstractHandler {
     private static final Logger log = LoggerFactory.getLogger(SimulatorHandler.class);
     private static final Logger simLog = LoggerFactory.getLogger("simulator");
 
-    private final Troxy troxy;
+    private final ModeHolder modeHolder;
+    private final List<Class<Filter>> filterClasses;
     private final Config config;
     private final TroxyFileHandler troxyFileHandler;
     private final Cache cache;
@@ -65,8 +66,13 @@ public class SimulatorHandler extends AbstractHandler {
         }
     }
 
-    public SimulatorHandler(final Troxy troxy, final Config config, final TroxyFileHandler troxyFileHandler, Cache cache) {
-        this.troxy = troxy;
+    public SimulatorHandler(final ModeHolder modeholder,
+                            final List<Class<Filter>> filterClasses,
+                            final Config config,
+                            final TroxyFileHandler troxyFileHandler,
+                            Cache cache) {
+        this.modeHolder = modeholder;
+        this.filterClasses = filterClasses;
         this.config = config;
         this.troxyFileHandler = troxyFileHandler;
         this.cache = cache;
@@ -91,7 +97,7 @@ public class SimulatorHandler extends AbstractHandler {
 
         /* instantiate filters */
         List<Filter> filters = new ArrayList<>();
-        for (Class<Filter> filterClass : troxy.getFilterClasses()) {
+        for (Class<Filter> filterClass : filterClasses) {
             try {
                 filters.add(filterClass.newInstance());
             } catch (InstantiationException e) {
@@ -106,7 +112,7 @@ public class SimulatorHandler extends AbstractHandler {
             filter.doFilterRequest(request, false);
 
         /* find response in cache */
-        Mode mode = troxy.getMode();
+        Mode mode = modeHolder.mode;
         List<Cache.Result> cacheResults = new ArrayList<>();
         if (mode == Mode.PLAYBACK || mode == Mode.PLAYBACK_OR_RECORD || mode == Mode.PLAYBACK_OR_PASSTHROUGH)
             cacheResults = cache.searchCache(request);

@@ -81,7 +81,7 @@ public class Troxy implements Runnable {
     private static final int DEFAULT_STATISTICS_INTERVAL = 60;
 
     private final Config config;
-    private Mode mode;
+    private ModeHolder modeHolder;
     private final Cache cache;
     private final StatisticsCollector statisticsCollector;
     private TroxyFileHandler troxyFileHandler;
@@ -113,7 +113,7 @@ public class Troxy implements Runnable {
         this.troxyFileHandler = troxyFileHandler;
         this.statisticsCollector = statisticsCollector;
 
-        mode = Mode.valueOf(config.getValue(KEY_MODE, DEFAULT_MODE.name()).toUpperCase());
+        modeHolder = new ModeHolder(Mode.valueOf(config.getValue(KEY_MODE, DEFAULT_MODE.name()).toUpperCase()));
 
         TroxyJettyServer.TroxyJettyServerConfig jettyConfig = createConfig();
         /* set up server */
@@ -160,7 +160,7 @@ public class Troxy implements Runnable {
         handlerList.addHandler(context);
 
         // and finally the simulator handler
-        SimulatorHandler simulatorHandler = new SimulatorHandler(this, config, troxyFileHandler, cache);
+        SimulatorHandler simulatorHandler = new SimulatorHandler(this.modeHolder, this.filterClasses, config, troxyFileHandler, cache);
         handlerList.addHandler(simulatorHandler);
         return handlerList;
     }
@@ -171,7 +171,7 @@ public class Troxy implements Runnable {
      * @return The current HTTP simulator mode.
      */
     public Mode getMode() {
-        return mode;
+        return modeHolder.mode;
     }
 
     /**
@@ -180,7 +180,7 @@ public class Troxy implements Runnable {
      * @param mode The current HTTP simulator mode.
      */
     public void setMode(String mode) {
-        this.mode = Mode.valueOf(mode);
+        this.modeHolder.mode = Mode.valueOf(mode);
     }
 
     public String getLoadedRecordingsFile() {
@@ -312,7 +312,7 @@ public class Troxy implements Runnable {
     public boolean reconfigure() {
         log.info("Reconfiguring Troxy server");
         config.reload();
-        mode = Mode.valueOf(config.getValue(KEY_MODE, DEFAULT_MODE.name()).toUpperCase());
+        modeHolder.mode = Mode.valueOf(config.getValue(KEY_MODE, DEFAULT_MODE.name()).toUpperCase());
         updateStatisticsInterval();
         loadFilters();
         return true;
