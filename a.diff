@@ -1,0 +1,894 @@
+diff --git a/build.sh b/build.sh
+index 220a12e8..de94303f 100755
+--- a/build.sh
++++ b/build.sh
+@@ -13,7 +13,7 @@ declare -r rpmTargetDir=packaging/rpm/target
+ case "$1" in
+     rpm)
+       # fra rpm fil under package/rpm/target etter bygging
+-      mvn clean package
++      mvn clean deploy -DaltDeploymentRepository=$(bob config get MAVEN_ALT_DEPLOYMENT_REPOSITORY)
+       # bob ci updateremoteyumrepo ${JOB_NAME} ${rpmTargetDir}/*.rpm
+       RPM_INST=$(cd packaging/rpm/target/ && ls *.rpm);export RPM_INST;
+       cp packaging/rpm/target/*.rpm ./
+diff --git a/filter/pom.xml b/filter/pom.xml
+index a46a98f3..12c8addd 100644
+--- a/filter/pom.xml
++++ b/filter/pom.xml
+@@ -4,11 +4,11 @@
+   <parent>
+     <groupId>no.sb1.troxy</groupId>
+     <artifactId>troxy</artifactId>
+-    <version>3.0.3-SNAPSHOT</version>
++    <version>3.0.400</version>
+   </parent>
+   <modelVersion>4.0.0</modelVersion>
+   <artifactId>filter</artifactId>
+-  <version>3.0.3-SNAPSHOT</version>
++  <version>3.0.400</version>
+   <name>Troxy Filters</name>
+ 
+   <dependencies>
+diff --git a/packaging/pom.xml b/packaging/pom.xml
+index 13326f03..9841547a 100644
+--- a/packaging/pom.xml
++++ b/packaging/pom.xml
+@@ -4,11 +4,11 @@
+   <parent>
+     <groupId>no.sb1.troxy</groupId>
+     <artifactId>troxy</artifactId>
+-    <version>3.0.3-SNAPSHOT</version>
++    <version>3.0.400</version>
+   </parent>
+   <modelVersion>4.0.0</modelVersion>
+   <artifactId>packaging</artifactId>
+-  <version>3.0.3-SNAPSHOT</version>
++  <version>3.0.400</version>
+   <packaging>pom</packaging>
+   <name>Troxy Packaging</name>
+ 
+diff --git a/packaging/rpm/pom.xml b/packaging/rpm/pom.xml
+index f9b5d622..832421a7 100644
+--- a/packaging/rpm/pom.xml
++++ b/packaging/rpm/pom.xml
+@@ -4,11 +4,11 @@
+   <parent>
+     <groupId>no.sb1.troxy</groupId>
+     <artifactId>packaging</artifactId>
+-    <version>3.0.3-SNAPSHOT</version>
++    <version>3.0.400</version>
+   </parent>
+   <modelVersion>4.0.0</modelVersion>
+   <artifactId>rpm</artifactId>
+-  <version>3.0.3-SNAPSHOT</version>
++  <version>3.0.400</version>
+   <packaging>pom</packaging>
+   <name>Troxy Packaging RPM</name>
+ 
+diff --git a/pom.xml b/pom.xml
+index a10f65a2..e15c3a99 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -5,7 +5,7 @@
+   <groupId>no.sb1.troxy</groupId>
+   <artifactId>troxy</artifactId>
+   <!-- NOTE: Don't change this value manually, run "mvn versions:set -DnewVersion=<version> versions:commit" -->
+-  <version>3.0.3-SNAPSHOT</version>
++  <version>3.0.400</version>
+   <packaging>pom</packaging>
+   <name>Troxy</name>
+   <description>
+diff --git a/sdk/pom.xml b/sdk/pom.xml
+index 3fee6330..87d7d189 100644
+--- a/sdk/pom.xml
++++ b/sdk/pom.xml
+@@ -4,11 +4,11 @@
+   <parent>
+     <groupId>no.sb1.troxy</groupId>
+     <artifactId>troxy</artifactId>
+-    <version>3.0.3-SNAPSHOT</version>
++    <version>3.0.400</version>
+   </parent>
+   <modelVersion>4.0.0</modelVersion>
+   <artifactId>sdk</artifactId>
+-  <version>3.0.3-SNAPSHOT</version>
++  <version>3.0.400</version>
+   <name>Troxy SDK</name>
+ 
+   <dependencies>
+diff --git a/sdk/src/main/java/no/sb1/troxy/http/common/Request.java b/sdk/src/main/java/no/sb1/troxy/http/common/Request.java
+index 405658b7..5848446f 100644
+--- a/sdk/src/main/java/no/sb1/troxy/http/common/Request.java
++++ b/sdk/src/main/java/no/sb1/troxy/http/common/Request.java
+@@ -83,8 +83,8 @@ public class Request extends Packet {
+                 String host = request.getHeader("Host");
+                 if (host != null && !host.isEmpty()) {
+                     try {
+-                        InetAddress addr = InetAddress.getByName(host.replaceAll(":\\d+$", ""));
+-                        if (!addr.isAnyLocalAddress() && !addr.isLoopbackAddress() && NetworkInterface.getByInetAddress(addr) == null)
++                        //InetAddress addr = InetAddress.getByName(host.replaceAll(":\\d+$", ""));
++                        //if (!addr.isAnyLocalAddress() && !addr.isLoopbackAddress() && NetworkInterface.getByInetAddress(addr) == null)
+                             url = new URL("http" + (request.isSecure() ? "s" : "") + "://" + host + pathInfo);
+                     } catch (Exception e) {
+                         log.warn("Unable to determine if host '{}' is a local address", host, e);
+diff --git a/server/pom.xml b/server/pom.xml
+index f3cdf494..7a196a60 100644
+--- a/server/pom.xml
++++ b/server/pom.xml
+@@ -4,11 +4,11 @@
+   <parent>
+     <groupId>no.sb1.troxy</groupId>
+     <artifactId>troxy</artifactId>
+-    <version>3.0.3-SNAPSHOT</version>
++    <version>3.0.400</version>
+   </parent>
+   <modelVersion>4.0.0</modelVersion>
+   <artifactId>server</artifactId>
+-  <version>3.0.3-SNAPSHOT</version>
++  <version>3.0.400</version>
+   <name>Troxy Server</name>
+ 
+   <dependencies>
+@@ -81,6 +81,8 @@
+           </archive>
+         </configuration>
+       </plugin>
++
++
+     </plugins>
+   </build>
+ </project>
+diff --git a/server/src/main/java/no/sb1/troxy/JettyHandlers.java b/server/src/main/java/no/sb1/troxy/JettyHandlers.java
+new file mode 100644
+index 00000000..dfa886c9
+--- /dev/null
++++ b/server/src/main/java/no/sb1/troxy/JettyHandlers.java
+@@ -0,0 +1,65 @@
++package no.sb1.troxy;
++
++import no.sb1.troxy.service.VersionService;
++import no.sb1.troxy.util.ApiHandler;
++import no.sb1.troxy.util.RequestInterceptor;
++import no.sb1.troxy.util.SimulatorHandler;
++import org.eclipse.jetty.server.handler.HandlerList;
++import org.eclipse.jetty.server.handler.ResourceHandler;
++import org.eclipse.jetty.servlet.ServletContextHandler;
++import org.eclipse.jetty.servlet.ServletHolder;
++import org.glassfish.hk2.utilities.binding.AbstractBinder;
++import org.glassfish.jersey.media.multipart.MultiPartFeature;
++import org.glassfish.jersey.server.ResourceConfig;
++import org.glassfish.jersey.servlet.ServletContainer;
++
++import java.io.File;
++
++public class JettyHandlers {
++
++    public static HandlerList getHandlerList() {
++        HandlerList handlerList = new HandlerList();
++        // a handler working like an interceptor to store recent requests sent to the server
++        RequestInterceptor requestInterceptor = new RequestInterceptor();
++        handlerList.addHandler(requestInterceptor);
++
++        // a resource handler for static files (html, js, css)
++        ResourceHandler resourceHandler = new ResourceHandler();
++        String resourceBase = "server/server/src/main/resources/webapp";
++        if ((new File(resourceBase)).exists())
++            resourceHandler.setResourceBase(resourceBase); // running locally, makes us able to modify html/css/js without building a new jar
++        else
++            resourceHandler.setResourceBase(Troxy.class.getClassLoader().getResource("webapp").toExternalForm());
++        handlerList.addHandler(resourceHandler);
++
++        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
++        context.setContextPath("/api");
++        context.addServlet(getJerseyServletHolder(), "/*");
++        handlerList.addHandler(context);
++
++        // and finally the simulator handler
++        SimulatorHandler simulatorHandler = new SimulatorHandler();
++        handlerList.addHandler(simulatorHandler);
++
++        return handlerList;
++
++    }
++
++    private static ServletHolder getJerseyServletHolder() {
++        // a servlet for handling the REST api
++        ResourceConfig resourceConfig = new ResourceConfig();
++        resourceConfig.register(ApiHandler.class);
++        resourceConfig.register(MultiPartFeature.class);
++        resourceConfig.register(new AbstractBinder() {
++            @Override
++            protected void configure() {
++                bindAsContract(VersionService.class);
++            }
++        });
++
++        ServletHolder apiServlet = new ServletHolder(new ServletContainer(resourceConfig));
++        apiServlet.setInitOrder(0);
++        apiServlet.setInitParameter("jersey.config.server.provider.classnames", ApiHandler.class.getCanonicalName());
++        return apiServlet;
++    }
++}
+diff --git a/server/src/main/java/no/sb1/troxy/JettyServer.java b/server/src/main/java/no/sb1/troxy/JettyServer.java
+new file mode 100644
+index 00000000..6030688c
+--- /dev/null
++++ b/server/src/main/java/no/sb1/troxy/JettyServer.java
+@@ -0,0 +1,142 @@
++package no.sb1.troxy;
++
++import no.sb1.troxy.common.Config;
++import org.apache.logging.log4j.LogManager;
++import org.apache.logging.log4j.Logger;
++import org.eclipse.jetty.server.*;
++import org.eclipse.jetty.util.ssl.SslContextFactory;
++
++import java.net.BindException;
++
++public class JettyServer {
++
++    private static final Logger log = LogManager.getLogger();
++
++
++    Server server;
++    private ServerConnector httpsConnector;
++
++
++    /**
++     * Default HTTP port.
++     */
++    private static final int DEFAULT_HTTP_PORT = 8080;
++    /**
++     * Default HTTPS port.
++     */
++    private static final int DEFAULT_HTTPS_PORT = 8081;
++
++
++    public JettyServer() {
++
++        int port;
++        try {
++            port = Integer.parseInt(Config.getValue("http.port", "" + DEFAULT_HTTP_PORT));
++        } catch (NumberFormatException e) {
++            log.warn("Unable to parse HTTP port from configuration, falling back to default port {}", DEFAULT_HTTP_PORT);
++            port = DEFAULT_HTTP_PORT;
++        }
++
++        int securePort;
++        try {
++            securePort = Integer.parseInt(Config.getValue("https.port", "" + DEFAULT_HTTPS_PORT));
++        } catch (NumberFormatException e) {
++            log.warn("Unable to parse HTTPS port from configuration, falling back to default port {}", DEFAULT_HTTPS_PORT);
++            securePort = DEFAULT_HTTPS_PORT;
++        }
++
++    }
++
++
++    /**
++     *
++     * @param port            http port (-1 to disable)
++     * @param securePort      https port (-1 to disable)
++     */
++    public JettyServer(int port, int securePort) {
++        createServer(port, securePort);
++    }
++
++    private void createServer(int port, int securePort) {
++        log.info("Starting Troxy HTTP/HTTPS Server");
++
++        server = new Server();
++
++        if (port > 0 ) {
++            /* setup http connector */
++            ServerConnector httpConnector = new ServerConnector(server, new HttpConnectionFactory());
++            httpConnector.setPort(port);
++            log.info("Troxy HTTP port: " + port);
++            server.addConnector(httpConnector);
++        }
++
++        if (securePort > 0) {
++            /* setup https connector */
++            SslContextFactory sslContextFactory = new SslContextFactory();
++            sslContextFactory.setKeyStorePath(Config.getValue("https.keystore.file"));
++            sslContextFactory.setKeyStoreType(Config.getValue("https.keystore.type"));
++            sslContextFactory.setKeyStorePassword(Config.getValue("https.keystore.password"));
++            sslContextFactory.setCertAlias(Config.getValue("https.keystore.alias.key"));
++            sslContextFactory.setKeyManagerPassword(Config.getValue("https.keystore.alias.password"));
++            HttpConfiguration httpsConfiguration = new HttpConfiguration();
++            httpsConfiguration.addCustomizer(new SecureRequestCustomizer());
++            httpsConnector = new ServerConnector(server, new SslConnectionFactory(sslContextFactory, "http/1.1"), new HttpConnectionFactory(httpsConfiguration));
++            httpsConnector.setPort(securePort);
++            log.info("Troxy HTTPS port: " + securePort);
++            server.addConnector(httpsConnector);
++        }
++    }
++
++    /**
++     * start server, removing https connector and retrying with only http if server start failed
++     */
++    public JettyServer start() {
++
++
++        boolean retryWithOnlyHttp = false;
++        try {
++            server.start();
++            log.info("Successfully started Troxy HTTP/HTTPS server");
++            server.join();
++        } catch (BindException e) {
++            log.warn("Unable to start Troxy HTTP/HTTPS Server, it seems like another program is already using the network port we wish to use", e);
++            retryWithOnlyHttp = true;
++        } catch (Exception e) {
++            log.warn("Unable to start Troxy HTTP/HTTPS Server, this is usually caused by wrong keystore password or a corrupt keystore. Trying again with only HTTP server", e);
++            retryWithOnlyHttp = true;
++        }
++        if (retryWithOnlyHttp && httpsConnector != null) {
++            server.removeConnector(httpsConnector);
++            try {
++                server.start();
++                log.info("Successfully started Troxy HTTP server");
++            } catch (BindException e) {
++                log.error("Unable to start Troxy HTTP Server, it seems like another program is already using the network port we wish to use, giving up", e);
++            } catch (Exception e) {
++                log.error("Unable to start Troxy HTTP Server, giving up", e);
++            }
++        }
++        return this;
++    }
++
++    public void join() {
++        try {
++            server.join();
++        } catch (InterruptedException e) {
++            log.error("Failed joining", e);
++        }
++
++    }
++
++    public void setHandler(Handler handler) {
++        server.setHandler(handler);
++    }
++
++    public void stop() {
++        try {
++            server.stop();
++        } catch (Exception e) {
++            log.error("Unable to stop Troxy HTTP Server, giving up", e);
++        }
++    }
++}
+diff --git a/server/src/main/java/no/sb1/troxy/Troxy.java b/server/src/main/java/no/sb1/troxy/Troxy.java
+index 20f8d33f..8ff3602d 100644
+--- a/server/src/main/java/no/sb1/troxy/Troxy.java
++++ b/server/src/main/java/no/sb1/troxy/Troxy.java
+@@ -4,8 +4,6 @@ import java.io.BufferedReader;
+ import java.io.File;
+ import java.io.FileReader;
+ import java.io.IOException;
+-import java.io.InputStream;
+-import java.net.BindException;
+ import java.net.MalformedURLException;
+ import java.net.URL;
+ import java.net.URLClassLoader;
+@@ -15,7 +13,6 @@ import java.util.Collections;
+ import java.util.Enumeration;
+ import java.util.HashSet;
+ import java.util.List;
+-import java.util.Properties;
+ import java.util.Set;
+ import java.util.stream.Collectors;
+ import java.util.zip.ZipEntry;
+@@ -24,77 +21,56 @@ import no.sb1.troxy.common.Config;
+ import no.sb1.troxy.common.Mode;
+ import no.sb1.troxy.http.common.Filter;
+ import no.sb1.troxy.record.v3.Recording;
+-import no.sb1.troxy.util.ApiHandler;
+ import no.sb1.troxy.util.Cache;
+-import no.sb1.troxy.util.RequestInterceptor;
+-import no.sb1.troxy.util.SimulatorHandler;
+ import no.sb1.troxy.util.StatisticsCollector;
+ import no.sb1.troxy.util.TroxyFileHandler;
+ import org.apache.logging.log4j.Level;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ import org.apache.logging.log4j.core.config.Configurator;
+-import org.eclipse.jetty.server.HttpConfiguration;
+-import org.eclipse.jetty.server.HttpConnectionFactory;
+-import org.eclipse.jetty.server.SecureRequestCustomizer;
+-import org.eclipse.jetty.server.Server;
+-import org.eclipse.jetty.server.ServerConnector;
+-import org.eclipse.jetty.server.SslConnectionFactory;
+-import org.eclipse.jetty.server.handler.HandlerList;
+-import org.eclipse.jetty.server.handler.ResourceHandler;
+-import org.eclipse.jetty.servlet.ServletContextHandler;
+-import org.eclipse.jetty.servlet.ServletHolder;
+-import org.eclipse.jetty.util.ssl.SslContextFactory;
+-import org.glassfish.jersey.media.multipart.MultiPartFeature;
+-import org.glassfish.jersey.server.ResourceConfig;
+-import org.glassfish.jersey.servlet.ServletContainer;
++
++import static java.lang.String.format;
++import static java.lang.System.getProperty;
++import static no.sb1.troxy.JettyHandlers.getHandlerList;
+ 
+ /**
+  * A server for HTTP requests.
+ 
+  */
+-public class Troxy implements Runnable {
++public class Troxy  {
+     /**
+      * Logger for this class.
+      */
+     private static final Logger log = LogManager.getLogger();
+ 
+-    /**
+-     * Troxy server version.
+-     */
+-    public static final String VERSION;
+-    /**
+-     * Troxy server release.
+-     */
+-    public static final String RELEASE;
+     /**
+      * Where Troxy resides, set to current working directory.
+      */
+-    public static final String TROXY_HOME;
++    public static String TROXY_HOME;
+     /**
+      * Directory where recordings are saved and loaded from.
+      */
+-    public static final String RECORDING_DIRECTORY;
++    public static String RECORDING_DIRECTORY;
+     /**
+      * Directory where filters can be found.
+      */
+-    public static final String FILTER_DIRECTORY;
++    public static String FILTER_DIRECTORY;
+     /**
+      * Directory where configuration can be found.
+      */
+-    public static final String CONFIG_DIRECTORY;
++    public static String CONFIG_DIRECTORY;
+     /**
+      * Directory where log files can be found.
+      */
+-    public static final String LOG_DIRECTORY;
++    public static String LOG_DIRECTORY;
+     /**
+      * Directory where statistics files can be found.
+      */
+-    public static final String STATISTICS_DIRECTORY;
++    public static String STATISTICS_DIRECTORY;
+     /**
+      * File used for storing loaded recordings in Troxy.
+      */
+-    public static final String LOADED_RECORDINGS_FILE;
++    public static String LOADED_RECORDINGS_FILE;
+ 
+     /**
+      * Configuration key for the HTTP simulator mode.
+@@ -104,14 +80,6 @@ public class Troxy implements Runnable {
+      * Default mode for the HTTP simulator.
+      */
+     private static final Mode DEFAULT_MODE = Mode.PLAYBACK;
+-    /**
+-     * Default HTTP port.
+-     */
+-    private static final int DEFAULT_HTTP_PORT = 8080;
+-    /**
+-     * Default HTTPS port.
+-     */
+-    private static final int DEFAULT_HTTPS_PORT = 8081;
+     /**
+      * The default interval between collecting statistics, in minutes.
+      */
+@@ -124,42 +92,43 @@ public class Troxy implements Runnable {
+      * List of all the filterClasses.
+      */
+     private static List<Class<Filter>> filterClasses = new ArrayList<>();
++
++
+     /**
+-     * The Jetty HTTP server.
++     * Default constructor.
++     *
+      */
+-    private static Server server;
++    public Troxy() {
++        this(getProperty("troxy.home") == null ?
++                Paths.get(getProperty("user.dir"), "packaging", "rpm", "src", "main", "resources", "opt", "troxy").toString() :
++                getProperty("troxy.home"),
++                "etc" + File.separator + "loaded_recordings.ini"
++                );
++    }
+ 
+-    static {
+-        String userDir = System.getProperty("user.dir");
+-        String troxyDir = System.getProperty("troxy.home");
+-        String logDir = System.getProperty("troxy.log.dir");
+-        TROXY_HOME = new File(troxyDir == null ? Paths.get(userDir, "packaging", "rpm", "src", "main", "resources", "opt", "troxy").toString() : troxyDir).getAbsolutePath();
++    /**
++     * @param troxyHome  Home folder for troxy configuration and recordings
++     * @param loadedRecordings Path for the loaded Recordings file (relative troxyHome)
++     */
++    public Troxy(String troxyHome, String loadedRecordings) {
++
++        String userDir = getProperty("user.dir");
++        String logDir = getProperty("troxy.log.dir");
++
++        TROXY_HOME = new File(troxyHome).getAbsolutePath();
+         RECORDING_DIRECTORY = new File(TROXY_HOME, "data" + File.separator + "recordings").getAbsolutePath();
+         FILTER_DIRECTORY = new File(TROXY_HOME, "data" + File.separator + "filters").getAbsolutePath();
+         CONFIG_DIRECTORY = new File(TROXY_HOME, "etc").getAbsolutePath();
+         LOG_DIRECTORY = new File(logDir == null ? Paths.get(userDir, "packaging", "rpm", "src", "main", "resources", "var", "log", "troxy").toString() : logDir).getAbsolutePath();
+         STATISTICS_DIRECTORY = new File(LOG_DIRECTORY, "statistics").getAbsolutePath();
+-        LOADED_RECORDINGS_FILE = new File(TROXY_HOME, "etc" + File.separator + "loaded_recordings.ini").getAbsolutePath();
+-
+-        Properties p = new Properties();
+-        try (InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("troxy_version.properties")) {
+-            p.load(inputStream);
+-        } catch (IOException e) {
+-            log.info("Unable to read file with Troxy version and release", e);
+-        }
+-        VERSION = p.getProperty("version", "<unknown>");
+-        RELEASE = p.getProperty("release", "<unknown>");
++        LOADED_RECORDINGS_FILE = new File(TROXY_HOME, loadedRecordings).getAbsolutePath();
+ 
+         // setup configuration
+         Troxy.reconfigure();
+-    }
+ 
+-    /**
+-     * Default constructor.
+-     */
+-    public Troxy() {
+-        log.info("Troxy version: {}", VERSION);
+-        log.info("Troxy release: {}", RELEASE);
++
++        log.info("Troxy version: {}", "VERSION");
++        log.info("Troxy release: {}", "RELEASE");
+         log.info("Troxy home: {}", TROXY_HOME);
+         log.info("Troxy recording directory: {}", RECORDING_DIRECTORY);
+         log.info("Troxy filter directory: {}", FILTER_DIRECTORY);
+@@ -170,46 +139,10 @@ public class Troxy implements Runnable {
+         /* get mode */
+         mode = Mode.valueOf(Config.getValue(KEY_MODE, DEFAULT_MODE.name()).toUpperCase());
+ 
+-        /* set up server */
+-        server = new Server();
++
+         loadFilters();
+ 
+-        /* handlers */
+-        HandlerList handlerList = new HandlerList();
+-        // a handler working like an interceptor to store recent requests sent to the server
+-        RequestInterceptor requestInterceptor = new RequestInterceptor();
+-        handlerList.addHandler(requestInterceptor);
+-
+-        // a resource handler for static files (html, js, css)
+-        ResourceHandler resourceHandler = new ResourceHandler();
+-        String resourceBase = "server/server/src/main/resources/webapp";
+-        if ((new File(resourceBase)).exists())
+-            resourceHandler.setResourceBase(resourceBase); // running locally, makes us able to modify html/css/js without building a new jar
+-        else
+-            resourceHandler.setResourceBase(Troxy.class.getClassLoader().getResource("webapp").toExternalForm());
+-        handlerList.addHandler(resourceHandler);
+-
+-        // a servlet for handling the REST api
+-        ResourceConfig resourceConfig = new ResourceConfig();
+-        resourceConfig.register(ApiHandler.class);
+-        resourceConfig.register(MultiPartFeature.class);
+-        ServletHolder apiServlet = new ServletHolder(new ServletContainer(resourceConfig));
+-        apiServlet.setInitOrder(0);
+-        apiServlet.setInitParameter("jersey.config.server.provider.classnames", ApiHandler.class.getCanonicalName());
+-        ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
+-        context.setContextPath("/api");
+-        context.addServlet(apiServlet, "/*");
+-        handlerList.addHandler(context);
+-
+-        // and finally the simulator handler
+-        SimulatorHandler simulatorHandler = new SimulatorHandler();
+-        handlerList.addHandler(simulatorHandler);
+-
+-        server.setHandler(handlerList);
+ 
+-        /* start statistics thread */
+-        updateStatisticsInterval();
+-        StatisticsCollector.startThread();
+     }
+ 
+     /**
+@@ -236,70 +169,6 @@ public class Troxy implements Runnable {
+         return filterClasses;
+     }
+ 
+-    /**
+-     * Run the TroxyServer.
+-     */
+-    @Override
+-    public void run() {
+-        log.info("Starting Troxy HTTP/HTTPS Server");
+-        /* setup http connector */
+-        int port;
+-        try {
+-            port = Integer.parseInt(Config.getValue("http.port", "" + DEFAULT_HTTP_PORT));
+-        } catch (NumberFormatException e) {
+-            log.warn("Unable to parse HTTP port from configuration, falling back to default port {}", DEFAULT_HTTP_PORT);
+-            port = DEFAULT_HTTP_PORT;
+-        }
+-        ServerConnector httpConnector = new ServerConnector(server, new HttpConnectionFactory());
+-        httpConnector.setPort(port);
+-
+-        /* setup https connector */
+-        int securePort;
+-        try {
+-            securePort = Integer.parseInt(Config.getValue("https.port", "" + DEFAULT_HTTPS_PORT));
+-        } catch (NumberFormatException e) {
+-            log.warn("Unable to parse HTTPS port from configuration, falling back to default port {}", DEFAULT_HTTPS_PORT);
+-            securePort = DEFAULT_HTTPS_PORT;
+-        }
+-        SslContextFactory sslContextFactory = new SslContextFactory();
+-        sslContextFactory.setKeyStorePath(Config.getValue("https.keystore.file"));
+-        sslContextFactory.setKeyStoreType(Config.getValue("https.keystore.type"));
+-        sslContextFactory.setKeyStorePassword(Config.getValue("https.keystore.password"));
+-        sslContextFactory.setCertAlias(Config.getValue("https.keystore.alias.key"));
+-        sslContextFactory.setKeyManagerPassword(Config.getValue("https.keystore.alias.password"));
+-        HttpConfiguration httpsConfiguration = new HttpConfiguration();
+-        httpsConfiguration.addCustomizer(new SecureRequestCustomizer());
+-        ServerConnector httpsConnector = new ServerConnector(server, new SslConnectionFactory(sslContextFactory, "http/1.1"), new HttpConnectionFactory(httpsConfiguration));
+-        httpsConnector.setPort(securePort);
+-
+-        /* start server, removing https connector and retrying with only http if server start failed */
+-        server.addConnector(httpConnector);
+-        server.addConnector(httpsConnector);
+-        boolean retryWithOnlyHttp = false;
+-        try {
+-            server.start();
+-            log.info("Successfully started Troxy HTTP/HTTPS server");
+-            server.join();
+-        } catch (BindException e) {
+-            log.warn("Unable to start Troxy HTTP/HTTPS Server, it seems like another program is already using the network port we wish to use", e);
+-            retryWithOnlyHttp = true;
+-        } catch (Exception e) {
+-            log.warn("Unable to start Troxy HTTP/HTTPS Server, this is usually caused by wrong keystore password or a corrupt keystore. Trying again with only HTTP server", e);
+-            retryWithOnlyHttp = true;
+-        }
+-        if (retryWithOnlyHttp) {
+-            server.removeConnector(httpsConnector);
+-            try {
+-                server.start();
+-                log.info("Successfully started Troxy HTTP server");
+-                server.join();
+-            } catch (BindException e) {
+-                log.error("Unable to start Troxy HTTP Server, it seems like another program is already using the network port we wish to use, giving up", e);
+-            } catch (Exception e) {
+-                log.error("Unable to start Troxy HTTP Server, giving up", e);
+-            }
+-        }
+-    }
+ 
+     /**
+      * Main method.
+@@ -311,22 +180,19 @@ public class Troxy implements Runnable {
+         log.info("Troxy starting...");
+ 
+         /* set up server thread & start it */
+-        Troxy troxy = new Troxy();
+-        new Thread(troxy).start();
++        final Troxy troxy = new Troxy();
++
++        JettyServer server = new JettyServer();
++        server.setHandler(getHandlerList());
++
++        /* start statistics thread */
++        updateStatisticsInterval();
++        StatisticsCollector.startThread();
++
++        new Thread(() -> server.start().join() ).start();
+ 
+         /* add recordings that were loaded when Troxy stopped */
+-        File loadedRecordings = new File(LOADED_RECORDINGS_FILE);
+-        if (loadedRecordings.exists()) {
+-            try (BufferedReader loadedFilesReader = new BufferedReader(new FileReader(loadedRecordings))) {
+-                Set<String> loadRecordings = new HashSet<>();
+-                String filename;
+-                while ((filename = loadedFilesReader.readLine()) != null)
+-                    loadRecordings.add(filename);
+-                loadRecordings(loadRecordings);
+-            } catch (IOException e) {
+-                log.warn("Unable to read file with loaded recordings", e);
+-            }
+-        }
++        addRecordingsInLoadedRecordingsFile();
+ 
+         /* set up shutdown hook */
+         Runtime.getRuntime().addShutdownHook(new Thread() {
+@@ -345,6 +211,56 @@ public class Troxy implements Runnable {
+         });
+     }
+ 
++
++    /**
++     *
++     * Starts Troxy for embedded use. When this function returns is Troxy up and ready to receive network traffic
++     *
++     * @param troxyHomePath
++     * @param loadedRecordingsPath  recordings to enable on startup
++     * @param port to listen on
++     * @return
++     */
++    public static JettyServer runTroxyEmbedded(String troxyHomePath, String loadedRecordingsPath, int port)  {
++        long t = System.currentTimeMillis();
++
++        /* set log level */
++        Configurator.setRootLevel(Level.ALL);
++        log.info("Troxy starting...");
++
++        /* set up server thread & start it */
++        Troxy troxy = new Troxy(troxyHomePath, loadedRecordingsPath);
++
++        JettyServer jettyServer = new JettyServer(port, -1);
++        jettyServer.setHandler(getHandlerList());
++
++        /* add recordings */
++        addRecordingsInLoadedRecordingsFile();
++
++        try {
++            jettyServer.server.start();
++        } catch (Exception e) {
++            throw new RuntimeException(e);
++        }
++        long timeout = System.currentTimeMillis() + 30000;
++        while (!jettyServer.server.isStarted()) {
++            try {
++                Thread.sleep(100);
++                System.out.println(".");
++            } catch (InterruptedException e) {
++                // no-op
++            }
++            if (System.currentTimeMillis() > timeout) {
++                throw new RuntimeException("Server took too long to start up.");
++            }
++        }
++
++        log.info(format("Troxy has started up in embedded mode. Startup time: %d ms", System.currentTimeMillis()-t));
++
++        return jettyServer;
++    }
++
++
+     /**
+      * Reconfigure Troxy server.
+      */
+@@ -357,6 +273,26 @@ public class Troxy implements Runnable {
+         return true;
+     }
+ 
++
++
++    public static void addRecordingsInLoadedRecordingsFile() {
++
++        File loadedRecordings = new File(LOADED_RECORDINGS_FILE);
++        if (loadedRecordings.exists()) {
++            try (BufferedReader loadedFilesReader = new BufferedReader(new FileReader(loadedRecordings))) {
++                Set<String> loadRecordings = new HashSet<>();
++                String filename;
++                while ((filename = loadedFilesReader.readLine()) != null)
++                    loadRecordings.add(filename);
++                loadRecordings(loadRecordings);
++            } catch (IOException e) {
++                log.warn("Unable to read file with loaded recordings", e);
++            }
++        }
++
++
++    }
++
+     /**
+      * Load Recordings into Cache.
+      * @param paths Files to load.
+diff --git a/server/src/main/java/no/sb1/troxy/service/VersionService.java b/server/src/main/java/no/sb1/troxy/service/VersionService.java
+new file mode 100644
+index 00000000..79ae0eff
+--- /dev/null
++++ b/server/src/main/java/no/sb1/troxy/service/VersionService.java
+@@ -0,0 +1,38 @@
++package no.sb1.troxy.service;
++
++
++import org.apache.logging.log4j.LogManager;
++import org.apache.logging.log4j.Logger;
++
++import javax.inject.Named;
++import java.io.IOException;
++import java.io.InputStream;
++import java.util.Properties;
++
++@Named
++public class VersionService {
++
++    private static final Logger log = LogManager.getLogger();
++    private final String release;
++    private final String version;
++
++    public VersionService() {
++
++        Properties p = new Properties();
++        try (InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("troxy_version.properties")) {
++            p.load(inputStream);
++        } catch (IOException e) {
++            log.info("Unable to read file with Troxy version and release", e);
++        }
++        version = p.getProperty("version", "<unknown>");
++        release = p.getProperty("release", "<unknown>");
++    }
++
++    public String getRelease() {
++        return release;
++    }
++
++    public String getVersion() {
++        return version;
++    }
++}
+diff --git a/server/src/main/java/no/sb1/troxy/util/ApiHandler.java b/server/src/main/java/no/sb1/troxy/util/ApiHandler.java
+index 0b5aea90..3c50df23 100644
+--- a/server/src/main/java/no/sb1/troxy/util/ApiHandler.java
++++ b/server/src/main/java/no/sb1/troxy/util/ApiHandler.java
+@@ -24,6 +24,7 @@ import java.util.Set;
+ import java.util.regex.Pattern;
+ import java.util.stream.Collectors;
+ import java.util.zip.GZIPInputStream;
++import javax.inject.Inject;
+ import javax.inject.Singleton;
+ import javax.ws.rs.Consumes;
+ import javax.ws.rs.DELETE;
+@@ -40,6 +41,7 @@ import no.sb1.troxy.Troxy;
+ import no.sb1.troxy.http.common.Request;
+ import no.sb1.troxy.record.v3.Recording;
+ import no.sb1.troxy.record.v3.RequestPattern;
++import no.sb1.troxy.service.VersionService;
+ import org.apache.logging.log4j.LogManager;
+ import org.apache.logging.log4j.Logger;
+ import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
+@@ -56,14 +58,18 @@ public class ApiHandler {
+     private static final int MAX_LOG_LINES = 2000;
+     private static final Pattern LOGFILE_PATTERN = Pattern.compile("simulator.log.*");
+ 
++
++    @Inject
++    VersionService versionService;
++
+     @GET
+     @Path("status")
+     @Produces(MediaType.APPLICATION_JSON)
+     public Map<String, Object> getStatus() {
+         Map<String, Object> status = new HashMap<>();
+         status.put("mode", Troxy.getMode());
+-        status.put("version", Troxy.VERSION);
+-        status.put("release", Troxy.RELEASE);
++        status.put("version", versionService.getVersion());
++        status.put("release", versionService.getRelease());
+         status.put("statisticsInterval", StatisticsCollector.getStatisticsInterval());
+         Map<String, Date> lastUsers = new HashMap<>();
+         RequestInterceptor.getLastUsers().entrySet().stream()
+diff --git a/server/src/main/resources/log4j.xml b/server/src/main/resources/log4j.xml
+deleted file mode 100644
+index 16138f9b..00000000
+--- a/server/src/main/resources/log4j.xml
++++ /dev/null
+@@ -1,13 +0,0 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+-<Configuration>
+-  <Appenders>
+-    <Console name="Console" target="SYSTEM_OUT">
+-      <PatternLayout pattern="%d{HH:mm:ss.SSS %-5level %logger{36} - %m%n"/>
+-    </Console>
+-  </Appenders>
+-  <Loggers>
+-    <Root level="info">
+-      <AppenderRef ref="Console"/>
+-    </Root>
+-  </Loggers>
+-</Configuration>
